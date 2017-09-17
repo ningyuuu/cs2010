@@ -77,8 +77,6 @@ class PatientNames {
     return count;
 
     // --------------------------------------------
-
-    return ans;
   }
 
   void run() throws Exception {
@@ -159,9 +157,10 @@ class PatientBST {
   // method to call a search
   public Patient search(String patientName) {
     PatientVertex res = search(root, patientName);
+    return res.patient;
   }
 
-  private Patient search(PatientVertex vertex, String patientName) {
+  private PatientVertex search(PatientVertex vertex, String patientName) {
     if (vertex == null) {
       return null;
     } else if (vertex.patient.compareTo(patientName) == 0) {
@@ -187,7 +186,7 @@ class PatientBST {
       T.right.parent = T;
     } else {
       T.left = insert(T.left, p);
-      T.right.parent = T;
+      T.left.parent = T;
     }
 
     return T;
@@ -203,8 +202,22 @@ class PatientBST {
   private void inorderList(PatientVertex T, ArrayList<Patient> list) {
     if (T==null) return;
     inorderList(T.left, list);
-    list.add(T);
+    list.add(T.patient);
     inorderList(T.right, list);
+  }
+
+  public PatientVertex findMin() {
+    return findMin(root);
+  }
+
+  public PatientVertex findMin(PatientVertex T) {
+    if (T == null) {
+      return null; // BST is completely empty if this happens
+    } else if (T.left == null) {
+      return T;
+    } else {
+      return findMin(T.left);
+    }
   }
 
   public Patient successor(String patientName) {
@@ -227,8 +240,11 @@ class PatientBST {
       PatientVertex current = T;
 
       while ((parent != null) && (current == parent.right)) {
-        return parent == null ? null : parent;
+        current = parent;
+        parent = current.parent;
       }
+
+      return parent;
     }
   }
 
@@ -251,14 +267,19 @@ class PatientBST {
       } else if (T.left == null && T.right != null) {
         T.right.parent = T.parent;
         T = T.right;
-      } else if (T.left != null && T.right != null) {
+        // System.out.println("DELETE A HERE");
+      } else if (T.left != null && T.right == null) {
+        // System.out.println("NTH HERE");
         T.left.parent = T.parent;
         T = T.left;
       } else {
         Patient successorPatient = successor(patientName);
+        // System.out.println(successorPatient.getName());
         T.patient = successorPatient;
-        T.right = delete(T.right, successorPatient);
+        T.right = delete(T.right, successorPatient.getName());
       }
     }
+
+    return T;
   }
 }
