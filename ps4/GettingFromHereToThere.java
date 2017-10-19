@@ -10,7 +10,7 @@ import java.io.*;
 class GettingFromHereToThere {
   private int V; // number of vertices in the graph (number of rooms in the building)
   private ArrayList<ArrayList<IntegerPair>> AdjList; // the weighted graph (the building), effort rating of each corridor is stored here too
-  private HashMap<Integer, HashMap<Integer, Integer>> memoHash;
+  private int[][] weights;
 
   // if needed, declare a private data structure here that
   // is accessible to all methods in this class
@@ -21,17 +21,23 @@ class GettingFromHereToThere {
   // --------------------------------------------
 
   public GettingFromHereToThere() {
-    // Write necessary codes during construction;
+    // write necessary codes during construction;
     //
     // write your answer here
-    memoHash = new HashMap<Integer, HashMap<Integer, Integer>>();
   }
 
   void PreProcess() {
     // write your answer here
-    // you can leave this method blank if you do not need it
-
+    // you can leave this method blank if you do not need it    
+    int rows = Math.min(V, 10);
+    weights = new int[rows][V];
+    for (int i=0; i<rows; i++) {
+      for (int j=0; j<V; j++) {
+        weights[i][j] = -1;
+      }
+    }
     prims();
+    DFSFetchWeights();
   }
 
   int Query(int source, int destination) {
@@ -46,26 +52,26 @@ class GettingFromHereToThere {
     // applying a DFS to find the right path
 
     // for 4D: a memoization key
-    int max = Math.max(source, destination);
-    int min = Math.min(source, destination);
+    // int max = Math.max(source, destination);
+    // int min = Math.min(source, destination);
 
-    if (!memoHash.containsKey(max)) {
-      memoHash.put(max, new HashMap<Integer, Integer>());
-    }
+    // if (!memoHash.containsKey(max)) {
+    //   memoHash.put(max, new HashMap<Integer, Integer>());
+    // }
 
-    if (!memoHash.get(max).containsKey(min)) {
-      System.out.println("HELLO");
-      int[] visited = new int[V];
-      // System.out.println("V:" + visited.length);
-      for (int i=0; i<visited.length; i++) {
-        visited[i] = -1;
-      }
+    // if (!memoHash.get(max).containsKey(min)) {
+    //   System.out.println("HELLO");
+    //   int[] visited = new int[V];
+    //   // System.out.println("V:" + visited.length);
+    //   for (int i=0; i<visited.length; i++) {
+    //     visited[i] = -1;
+    //   }
 
-      DFS(visited, source, destination);
-      memoHash.get(max).put(min, maxWeightInPath(source, destination, visited));
-    }
+    //   DFS(visited, source, destination);
+    //   memoHash.get(max).put(min, maxWeightInPath(source, destination, visited));
+    // }
 
-    return memoHash.get(max).get(min);
+    return weights[source][destination];
   }
 
   // You can add extra function if needed
@@ -111,6 +117,27 @@ class GettingFromHereToThere {
       // System.out.println("processing: " + e.first());
       if (!taken[e.first()]) {
         pq.offer(new IntegerTriple(e.second(), idx, e.first())); // to compare weight first
+      }
+    }
+  }
+
+  // recursive DFS traversal, one shot get weights
+  void DFSFetchWeights() {
+    int rows = Math.min(10, V);
+    for (int i=0; i<rows; i++) {
+      weights[i][i] = 0;
+      DFSWeights(i, i);
+    }
+    // System.out.println(Arrays.deepToString(weights));
+  }
+
+  void DFSWeights(int source, int v) {
+    ArrayList<IntegerPair> edges = AdjList.get(v);
+    for (IntegerPair edge: edges) {
+      // System.out.println(source + " " + edge.first());
+      if (weights[source][edge.first()] == -1) {
+        weights[source][edge.first()] = Math.max(edge.second(), weights[source][v]);
+        DFSWeights(source, edge.first());
       }
     }
   }
