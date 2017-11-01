@@ -1,0 +1,3 @@
+- to memoize, i just have to keep a record each time i query on djikstra, so djikstra won't run more than once for each source
+
+- djikstra needs this decreasekey thing. how am i supposed to code that?

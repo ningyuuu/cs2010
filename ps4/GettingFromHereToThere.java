@@ -2,8 +2,8 @@
 import java.util.*;
 import java.io.*;
 
-// write your matric number here:
-// write your name here:
+// write your matric number here: A0111277M
+// write your name here: Ning Yu
 // write list of collaborators here:
 // year 2017 hash code: 1T5wnBBL7ix0uP44Ogtn (do NOT delete this line)
 
