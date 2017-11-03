@@ -13,9 +13,10 @@ class Bleeding {
   private ArrayList <ArrayList<IntegerPair>> AdjList; // the weighted graph (the Singapore map), the length of each edge (road) is stored here too, as the weight of edge
   private int maxValue;
   private TreeSet<IntegerPair> ts;
-  private PriorityQueue<IntegerTriple> pq;
+  private PriorityQueue<IntegerPair> pq;
   private HashMap<Integer, IntegerPair> keymap;
-  private int[][] distances;
+  private int[][] memo;
+  private int[] hasMemo;
 
   // if needed, declare a private data structure here that
   // is accessible to all methods in this class
@@ -37,8 +38,14 @@ class Bleeding {
     //
     // write your answer here
     //------------------------------------------------------------------------- 
+    memo = new int[V][V];
+    for (int i=0; i<V; i++) {
+      for (int j=0; j<V; j++) {
+        memo[i][j] = -1;
+      }
+    }
 
-
+    hasMemo = new int[V];
     //------------------------------------------------------------------------- 
   }
 
@@ -50,8 +57,16 @@ class Bleeding {
     // with one catch: this path cannot use more than k vertices      
     //
     // write your answer here
-    
-    return modModDjikstra(s, t, k);
+    if (hasMemo[s] == 0) {
+      modDjikstra(s, t, 0);
+      hasMemo[s] = 1;
+    }
+
+    if (memo[s][t] < maxValue) {
+      return memo[s][t];
+    } else {
+      return -1;
+    }
 
     //------------------------------------------------------------------------- 
   }
@@ -92,79 +107,43 @@ class Bleeding {
   //   }
   // }
   
-  // void modDjikstra(int src, int dest, int k) {
-  //   pq = new PriorityQueue<IntegerPair>();
-  //   IntegerPair currPair;
-  //   // integerpair is (distance, node)
-
-  //   for (int i=0; i<V; i++) {
-  //     memo[src][i] = maxValue;
-  //   }
-
-  //   memo[src][src] = 0;
-
-  //   pq.add(new IntegerPair(0, src));
-
-  //   while (pq.size() > 0) {
-  //     currPair = pq.poll();
-  //     if (memo[src][currPair.second()] < currPair.first()) {
-  //       continue;
-  //     } else {
-  //       for (IntegerPair node: AdjList.get(currPair.second())) {
-  //         relax(currPair.second(), node.first(), node.second(), src);
-  //       }
-  //     }
-  //   }
-  // }
-
-  int modModDjikstra(int src, int dest, int k) {
-    pq = new PriorityQueue<IntegerTriple>();
-    IntegerTriple curr;
-    // integerpair is (distance, jumps, node)
-
-    distances = new int[V][k+1];
-    // k+1 as e.g. 5 jumps needs [0, 1, 2, 3, 4, 5] -> (len = 6)
+  void modDjikstra(int src, int dest, int k) {
+    pq = new PriorityQueue<IntegerPair>();
+    IntegerPair currPair;
+    // integerpair is (distance, node)
 
     for (int i=0; i<V; i++) {
-      for (int j=0; j<k+1; j++) {
-        distances[i][j] = maxValue;
-      }
+      memo[src][i] = maxValue;
     }
 
-    distances[src][0] = 0;
+    memo[src][src] = 0;
 
-    pq.add(new IntegerTriple(0, 0, src));
+    pq.add(new IntegerPair(0, src));
 
     while (pq.size() > 0) {
-      curr = pq.poll();
-      if (distances[curr.third()][curr.second()] < curr.first()) {
-        continue;
-      } else if (curr.second() >= k) {
+      currPair = pq.poll();
+      if (memo[src][currPair.second()] < currPair.first()) {
         continue;
       } else {
-        for (IntegerPair node: AdjList.get(curr.third())) {
-          relax(curr.third(), node.first(), node.second(), curr.second());
+        for (IntegerPair node: AdjList.get(currPair.second())) {
+          relax(currPair.second(), node.first(), node.second(), src);
         }
       }
     }
-
-    int result = maxValue;
-    for (int i=0; i<k; i++) {
-      if (distances[dest][i] < result) {
-        result = distances[dest][i];
-      }
-    }
-    
-    if (result == maxValue) {
-      return -1;
-    }
-    return result;
   }
 
-  void relax(int u, int v, int weightuv, int k) {
-    if (distances[v][k+1] > distances[u][k] + weightuv) {
-      distances[v][k+1] = distances[u][k] + weightuv;
-      pq.offer(new IntegerTriple(distances[v][k+1], k+1, v));
+  void updateDist(int node, int value, int src) {
+    memo[src][node] = value;
+  }
+
+  int getWeight(int node, int src) {
+    return memo[src][node];
+  }
+
+  void relax(int u, int v, int weightuv, int src) {
+    if (getWeight(v, src) > getWeight(u, src) + weightuv) {
+      updateDist(v, getWeight(u, src) + weightuv, src);
+      pq.offer(new IntegerPair(getWeight(v, src), v));
     }
   }
 
@@ -292,27 +271,4 @@ class IntegerPair implements Comparable < IntegerPair > {
 
   Integer first() { return _first; }
   Integer second() { return _second; }
-}
-
-class IntegerTriple implements Comparable <IntegerTriple> {
-  Integer _first, _second, _third;
-
-  public IntegerTriple(Integer f, Integer s, Integer t) {
-    _first = f;
-    _second = s;
-    _third = t;
-  }
-
-  public int compareTo(IntegerTriple o) {
-    if (!this.first().equals(o.first()))
-      return this.first() - o.first();
-    else if (!this.second().equals(o.second()))
-      return this.second() - o.second();
-    else
-      return this.third() - o.third();
-  }
-
-  Integer first() { return _first; }
-  Integer second() { return _second; }
-  Integer third() { return _third; }
 }
