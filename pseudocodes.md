@@ -367,3 +367,266 @@ class BBST {
   }
 }
 ```
+
+# Union Find Disjoint Sets
+A forest of nodes (in trees) to represent if they are connected
+
+```
+class UFDS {
+  int[] p;
+  int[] rank;
+  int[] size;
+  int sets;
+
+  constructor(len) {
+    p = new int[len];
+    rank = new int[len];
+    size = new int[len];
+    sets = len;
+    
+    // init each of p to itself (its own root)
+    // init each of rank to 0
+    // init each of size to 1
+    for (let i=0; i<len; i++) {
+      p[i] = i;
+      rank[i] = 0;
+      size[i] = 1;
+    }
+  }
+
+  int find(i) {
+    if (p[i] == i) {
+      // if we found root, return root
+      return i;
+    } else {
+      // else we dig for root
+      ret = find(p[i]);
+      
+      // path compression to make future searches o(1)
+      p[i] = ret;
+
+      // finally return root
+      return ret;
+    }
+  }
+
+  void union(i, j) {
+    int seti = find(i);
+    int setj = find(j);
+    if (seti !== setj) {
+      // only union if they are not already in the same set
+      // decrease total set count
+      sets--;
+
+      if (rank[seti] > rank[setj]) {
+        // make i's root the main root
+        p[setj] = p[seti];
+        // update i's root's size
+        size[seti] = size[seti] + size[setj];
+      } else {
+        // make j's root the main root
+        p[seti] = p[setj];
+        // update j's root's size
+        size[setj] =  size[seti] + size[setj];
+      }
+    }
+  }
+
+  num = () => num;
+  size = (i) => size[find(i)];
+}
+```
+
+# Breadth First Search / Depth First Search
+BFS and DFS, running through an Adjacency List
+
+```
+class BFSDFS {
+  int[][] adjlist; // in java, use ArrayList<ArrayList<Integer>>
+
+  constructor() {
+    populate_adjlist(); // not implementing this
+  }
+
+  int[] bfs(x) {
+    int[] queue = []; // its a queue
+    int[] prev = new int[adjlist.length].map(x => -1); // int of -1
+
+    // init with x
+    queue.push(x);
+
+    // run through the queue till its empty
+    while (queue.length > 0) {
+      let curr = queue.shift(); // take from front, to behave like queue
+
+        // process a neighbour if it hasn't been visited before
+        adjlist[curr].forEach(item => {
+          if (prev[item] == -1) {
+            prev[item] = curr;
+            queue.push(curr);
+          }
+        });
+      }
+    }
+
+    return prev;
+  }
+
+  int[] dfs(x) {
+    int[] prev = new int[adjlist.length].map(x => -1);
+
+    // we use a recursive helper to do the actual dfs
+    prev[x] = x;
+    dfsrec(prev, x);
+  }
+
+  void dfsrec(prev, x) {
+    adjlist[x].forEach(y => {
+      if (prev[y] == -1) {
+        prev[y] = x;
+        dfsrec(prev, x, y);
+      }
+    });
+  }
+}
+```
+
+
+* DFS can be used in a post order way toposort.
+* at the last line of dfsrec(), put `toposort.append(x);`
+* this will give us a reverse of the toposort 
+
+
+# Minimum Spanning Trees (MST)
+Can be done with Prim's and Kruskal's
+
+```
+class MST {
+  {weight, dest}[][] adjlist; // in java, it's ArrayList<ArrayList<IntegerPair>>
+  arrlist<weight, dest, start> edgelist; // the edgelist
+  {weght, dest}[][] mst; // let this be a adjmatrix
+
+
+  constructor() {
+    populate(adjlist); // not implementing this
+    populate(edgelist);
+  }
+
+  prims(x) {
+    // calling prims will generate mst, an MST of adjlist
+    // x is the starting point
+
+    bool[] taken = new bool[adjlist.length].map(x => false);
+    PriorityQueue<{weight, dest, start}> pq = new PriorityQueue();
+
+    adjlist[x].map(y => pq.add({y.weight, y.dest, x}));
+
+    while (!pq.length > 0) {
+      let z = pq.pop();
+      if (taken[z.dest] === -1) {
+        taken[z.dest] = false;
+        mst[z.start][z.dest] = z.weight;
+        adjlist[z.dest].map(y => {
+          if (!taken[y.dest]) {
+            pq.add(y.weight, y.dest, z);
+          }
+        })
+      }
+    }
+  }
+
+  kruskals() {
+    edgelist.sort(); // in java, it's Collections.sort();
+    UFDS ufds = new UFDS();
+    edgelist.forEach(edge => {
+      if (ufds.find(edge.dest) !== ufds.find(edge.start)) {
+        mst[edge.start][edge.end] = edge.weight;
+        ufds.union(edge.start, edge.end);
+      }
+    })
+  }
+}
+```
+
+# Shortest Path Algorithms
+BFS, Bellman-Ford, Djikstra, APSP
+
+```
+class ShortestPath {
+  AdjList adjlist; // like the prior;
+  int[][] adjmatrix;
+  int V;
+  int[] D, p;
+
+  constructor() {
+    populateAllTheStuffHehe();
+  }
+
+  initSSSP(s) {
+    D = new int[V].map(x => INFINITY);
+    p = new int[V].map(x => -1);
+    D[s] = 0;
+  }
+
+  relax(u, v, w_u_v) {
+    if D[v] > D[u] + w_u_v {
+      D[v] = D[u] + w_u_v;
+      p[v] = u;
+    }
+  }
+
+  modifiedbfs(x) {
+    // only for constant weight graphs
+    initSSSP(x);
+    int[] queue = [];
+    queue.push(x);
+
+    while (queue.length > 0) {
+      item = queue.shift();
+      adjlist[item].forEach(y => {
+        if D[y] = INIFINITY {
+          D[y] = D[item] + 1;
+          p[y] = item;
+          queue.push(y);
+        }
+      })
+    } 
+  }
+
+  bellmanford(x) {
+    initSSSP(x);
+    for (let i=0; i<V-1; i++) { // if its a dag, then we can just 1 pass
+    // with edges in topological order
+      adjlist.forEach(v,idx => {
+        v.forEach(edge => {
+          relax(idx, edge.dest, edge.weight);
+        })
+      })
+    }
+  }
+
+  djikstra(x) {
+    PriorityQueue<{weight, dest}> = new PriorityQueue(); // this pq needs a decreasekey methodd, which java does not implement
+    initSSSP(x); // we won't use p here
+    for (let i=0; i<V; i++) {
+      if (i == x) pq.push(0, i);
+      else pq.push(INFINITY, i);
+    }
+
+    while (!PQ.isempty()) {
+      item = PQ.poll();
+      D[item.dest] = item.weight;
+      adjlist[item].forEach(y => {
+        if (pq[y.dest].weight > item.weight + y.weight) {
+          pq.decreaseKey(y.dest, item.weight + y.weight);
+          p[y.dest] = item.dest;
+        }
+      });
+    }
+  }
+
+  moddjikstra(x) {
+    
+  }
+}
+```
