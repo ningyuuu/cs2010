@@ -147,8 +147,7 @@ class BSTVertex {
     right = null;
     height = 0;
   }
-}
-class BBST {
+}class BBST {
   BSTVertex root;
 
   constructor() {
@@ -213,6 +212,10 @@ class BBST {
       T.left = insert(T.left, v);
       T.left.parent = T;
     }
+
+    // bbst: update height then rebalance
+    T.height = Math.max(T.left.height, T.right.height) + 1;
+    T = rebalance(T);
 
     // finally we return T
     return T;
@@ -364,7 +367,83 @@ class BBST {
         T.right = delete(T.right, successorV);
       }
     }
+
+    // bbst: update height + rebalance
+    // in reality, abstract height to method to account for null
+    T.height = Math.max(T.left.height, T.right.height) + 1;
+    T = rebalance(T);
+
+    return T;
   }
+
+  // to maintain balance, we require height to be within
+  // a difference of 1 between left and right subtrees
+  BSTVertex rebalance(T) {
+    // it will do all the necessary rotations to balance
+    // then return the new root of the balanced tree/subtree
+
+    // first, we get the balance factor of the node
+    int bf = getbf(T);
+    if (bf >= 2) {
+      // too much shit on the left, we'll need to rotate right
+      if (getbf(T.left) == -1) {
+        // this is a left-right case, which means its left child
+        // is already heavy on the right. since the right
+        // load will shift over, we want to keep the heavy 
+        // stuff on the left -> we rotate left first
+        T.left = rotateLeft(T.left);
+
+        // now it is definitely left-left
+      }
+      // now we rotate right
+      T = rotateRight(T);
+
+    } else if (bf <= -2) {
+      // too much on the right, we need to hit left
+      // but first, check for rightleft case
+      if (getbf(T.right) == 1) {
+        T.right = rotateRight(T.right);
+      }
+      // then fix from rightright to balance
+      T = rotateLeft(T);
+    }
+  }
+
+  int getbf(T) {
+    if (T == null) {
+      return 0;
+    }
+
+    int lefth = T.left == null ? -1 : T.left.height;
+    int righth = T.right == null ? -1 : T.right.height;
+    return lefth - righth;
+  }
+
+  BSTVertex rotateLeft(T) {
+    // i'm literally following the slides here
+    BSTVertex W = T.right; // my new root
+    W.parent = T.parent;
+    T.parent = W;
+    T.right = W.left; //taking over its left subtree
+    if (W.left != null) {
+      W.left.parent = T;
+    }
+    W.left = T;
+    
+    // update height
+    // in reality, abstract a method to take care of nullpointer
+    T.height = Math.max(T.left.height, T.right.height) + 1;
+    W.height = Math.max(W.left.height, W.right.height) + 1;
+    
+    // attach new root
+    return W;
+  }
+
+  BSTVertex rotateRight(T) {
+    // literally the same as rotateLeft but in mirror mode
+  }
+
+
 }
 ```
 
