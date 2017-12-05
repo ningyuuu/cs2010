@@ -705,7 +705,216 @@ class ShortestPath {
   }
 
   moddjikstra(x) {
-    
+    PriorityQueue<{dist, dest}> = new PriorityQueue();
+    // this priority queue holds the distance to a node, and the node id
+    initSSSP(x);
+
+    pq.add({0, x});
+    while (pq.length > 0) {
+      {currdist, currdest} = pq.poll();
+      if (D[currdest] < currdist) {
+        continue;
+      } else {
+        adjlist[currdest].forEach(edge => {
+          if (D[edge.dest] > D[currdest] + currdist) {
+            D[edge.dest] = D[currdest] + currdist;
+            pq.offer({D[edge.dest], edge.dest});
+          }
+        })
+      }
+    }
+
+    return D;
+  }
+}
+```
+
+# Dynamic Programming
+
+To do __Dynamic Programming__, we need 
+* Optimal Sub-structure
+* Overlapping Sub-problems
+
+### Travelling Salesman with Move Limit
+* Maybe dynanmic programming is just too _dynamic_ to write code about
+```
+class TSP {
+  int[][] memo;
+
+  constructor(moves, cities, reward, end) {
+    // where moves is number of moves
+    // cities is number of cities
+    // and reward is an arraylist with the reward at each edge
+    // end is a boolean array whether we can end at that city
+
+    memo = new int[moves][cities];
+  }
+
+  int getprofit(city, moves) {
+    if (moves == 0) {
+      if end[city] {
+        return 0;
+      } else {
+        return -1 * INFINITY;
+      }
+    } else {
+      // return Math.max([edge.weight + getprofit(edge.dest, moves-1) for edge in reward[city]]);// lol sorry some python inline here
+
+      //in java, we can do a loop through every edge, and update memo table
+      if (memo[city][moves] == -1) {
+        reward[city].forEach(edge => {
+          memo[city][moves] = Math.max(memo[city][moves], reward[city][edge.dest] + getprofit(edge.dest, moves-1));
+        })
+      }
+
+      return memo[city][moves];
+    }
+  }
+}
+```
+
+### Brute Force Hamiltonian Path on Full Graph
+* Uses __DFS__ with backtracking to generate all permutates, which is O(N!)
+```
+class TSP {
+  int[][] adjmatrix;
+  int V; // number of nodes
+  int[] visited;
+  int[] path;
+  int mincost;
+
+  constructor() {
+    populate(adjmatrix);
+    V = adjmatrix.length;
+    visited = new bool[V].map(() => false);
+    mincost = 9999999999;
+  }
+
+  backtracking(x) {
+    path.push(x);
+    visited[x] = true;
+
+    // check if its full
+    if (path.length == V) {
+      // calculate cost
+      int cost = 0;
+      for (let i=1; i<path.length; i++) {
+        cost += T[path[i-1][i]];
+      }
+      cost += T[path[path.length-1][0]];
+      mincost = Math.min(mincost, cost);
+    } else {
+      for (let i=0; i<V; i++) {
+        if (!visited[i]) backtracking(i);
+      }
+    }
+
+    visited[x] = false;
+    path.pop();
+  }
+
+  // method to query
+  int query() {
+    backtracking(0);
+    return mincost;
+  }
+}
+```
+
+### Longest Common Sub-sequence
+Given 2 strings X and Y, find their longest common subsequence.
+```
+class LCS {
+  char[] X, Y;
+  memo[][];
+
+  constructor(x, y) {
+    X = x;
+    Y = y;
+    memo = new int[X.length][Y.length];
+    memo = -1; // set to a matrix of -1
+  }
+
+  query() {
+    return longest(0, 0);
+  }
+
+  longest(x, y) { // top down version
+    if (x >= X.length || y >= y.length) {
+      return 0;
+    }
+
+    if (memo[x][y] == -1) {
+      if (X[x] == Y[y]) {
+        memo[x][y] = 1 + memo[x+1][y+1];
+      } else {
+        memo[x][y] = Math.max(longest[x][y+1], longest[x+1][y]);
+      }
+    }
+
+    return memo[x][y];
+  }
+
+  longestb() { // bottom up version
+    memo = new int[X.length+1][Y.length+1];
+
+    // first row and column all 0
+    memo[0].map(() => 0);
+    memo.map(x => x[0] = 0);
+
+    for (let i=0; i < X.length; i++) {
+      for (let j=0; j< Y.length; j++) {
+        if (x[i] == y[i]) {
+          memo[i+1][j+1] = D[i][j] + 1;
+        } else {
+          memo[i+1][j+1] = Math.max(memo[i][j+1], memo[j][i+1]);
+        }
+      }
+    }
+
+    return memo[memo.length][memo[0].length];
+  }
+}
+```
+
+### All Paths Shortest Path
+Floyd Warshall, AKA the 4 line wonder
+```
+class APSP {
+  adjmatrix D;
+  int[][] p;
+  int V;
+
+  constructor() {
+    populate(D); // infinity if edge does not exist, else edge weight
+    // transitive closure: set to true to exist, false is not exist
+    // negative cycles: D[i][j] where i == j = INFINITY
+    // then check: D[i][i] == INFINITY -> no cycle,
+    // 0 <= D[i][i]< INFINITY -> positive cycle,
+    // D[i][i] < 0 -> negative cycle
+    V = adjmatrix.length;
+  }
+
+  predecessor() {
+    p = new int[V][V];
+    for (let i=0; i<V; i++) {
+      p[i] = p[i].map(() => i);
+    }
+  }
+
+  floydwar() {
+    for (let i=0; i<V; i++) {
+      for (let j=0; j<V; j++) {
+        for (let k=0; k<V; k++) {
+          if (D[i][j] > D[i][k] + D[k][j]) {
+            D[i][j] = D[i][k] + D[k][j];
+            // p[i][j] = p[k][j]; // predecessor identification
+            // D[i][j] = D[i][j] || D[i][k] && D[i][j]; // transitive closure
+            // D[i][j] = Math.min(D[i][j], Math.max(D[i][k], D[k][j])); // minimax or maximin the other way
+          }
+        }
+      }
+    }
   }
 }
 ```
